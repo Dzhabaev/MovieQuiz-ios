@@ -80,8 +80,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="noButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="g3R-6Z-qZ9"/>
-                                                    <action selector="noButtonClickedWith_sender:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Gcf-Xf-sYL"/>
+                                                    <action selector="noButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="a8z-9G-2b8"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TlH-er-4SB" userLabel="Yes Button">
@@ -98,8 +97,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <action selector="yesButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eHS-PM-Ogf"/>
-                                                    <action selector="yesButtonClickedWith_sender:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zw0-Sc-vP7"/>
+                                                    <action selector="yesButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xn0-BV-YTA"/>
                                                 </connections>
                                             </button>
                                         </subviews>
