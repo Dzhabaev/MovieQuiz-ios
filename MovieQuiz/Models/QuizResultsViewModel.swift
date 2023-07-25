@@ -1,10 +1,3 @@
-//
-//  QuizResultsViewModel.swift
-//  MovieQuiz
-//
-//  Created by Чингиз Джабаев on 18.07.2023.
-//
-
 import Foundation
 // для состояния "Результат квиза"
 struct QuizResultsViewModel {

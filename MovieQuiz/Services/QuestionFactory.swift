@@ -1,10 +1,3 @@
-//
-//  QuestionFactory.swift
-//  MovieQuiz
-//
-//  Created by Чингиз Джабаев on 18.07.2023.
-//
-
 import Foundation
 
 class QuestionFactory: QuestionFactoryProtocol {
@@ -52,11 +45,16 @@ class QuestionFactory: QuestionFactoryProtocol {
             correctAnswer: false)
     ]
     // объявляем функцию requestNextQuestion, которая ничего не принимает и возвращает опциональную модель QuizQuestion
-    func requestNextQuestion() -> QuizQuestion? {
+    func requestNextQuestion() {
         guard let index = (0..<questions.count).randomElement() else {
-            return nil
+            delegate?.didReceiveNextQuestion(question: nil)
+            return
         }
-        return questions[safe: index]
+        let question = questions[safe: index]
+        delegate?.didReceiveNextQuestion(question: question)
+    }
+    private weak var delegate: QuestionFactoryDelegate?
+    init(delegate: QuestionFactoryDelegate){
+        self.delegate = delegate
     }
 }
-

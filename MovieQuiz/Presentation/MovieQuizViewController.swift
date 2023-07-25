@@ -1,12 +1,32 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Lifecycle
     // данные на экране
     struct ViewModel {
         let image: UIImage
         let question: String
         let questionNumber: String
+    }
+    struct Actor: Codable {
+        let id: String
+        let image: String
+        let name: String
+        let asCharacter: String
+    }
+    struct Movie: Codable {
+        let id: String
+        let rank: String
+        let title: String
+        let fullTitle: String
+        let year: String
+        let image: String
+        let crew: String
+        let imDbRating: String
+        let imDbRatingCount: String
+    }
+    struct Top: Decodable {
+        let items: [Movie]
     }
     
     // MARK: - IBOutlets
@@ -24,18 +44,49 @@ final class MovieQuizViewController: UIViewController {
     //общее количество вопросов для квиза
     private let questionsAmount: Int = 10
     //контроллер обращаться к фабрики вопросов
-    private let questionFactory: QuestionFactoryProtocol = QuestionFactory()
+    private var questionFactory: QuestionFactoryProtocol?
     //текущий вопрос, который видит пользователь
     private var currentQuestion: QuizQuestion?
+    // Здесь объявляем переменную statisticService
+    private var statisticService: StatisticService!
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        // заново показываем первый вопрос
-        if let firstQuestion = questionFactory.requestNextQuestion() {
-            currentQuestion = firstQuestion
-            let viewModel = convert(model: firstQuestion)
-            show(quiz: viewModel)
+        questionFactory = QuestionFactory(delegate: self)
+        questionFactory?.requestNextQuestion()
+        
+        // Инициализируем переменную statisticService как StatisticServiceImplementation
+        statisticService = StatisticServiceImplementation()
+        
+        // Получение пути к директории документов
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = "top250MoviesIMDB.json"
+        let fileURL = documentsURL.appendingPathComponent(fileName)
+        print(NSHomeDirectory())
+        
+        // Проверка наличия данных и декодирование JSON
+        do {
+            let data = try Data(contentsOf: fileURL)
+            guard let result = try? JSONDecoder().decode(Top.self, from: data) else {
+                print("Ошибка при декодировании JSON")
+                return
+            }
+            // Декодирование успешно, вы можете использовать объект result
+        } catch {
+            print("Ошибка при загрузке данных: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - QuestionFactoryDelegate
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {
+            return
+        }
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: viewModel)
         }
     }
     
@@ -63,7 +114,7 @@ final class MovieQuizViewController: UIViewController {
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
             // идём в состояние "Результат квиза"
-            let text = "Ваш результат: \(correctAnswers)/10"
+            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: text,
@@ -72,38 +123,60 @@ final class MovieQuizViewController: UIViewController {
         } else {
             currentQuestionIndex += 1
             // идём в состояние "Вопрос показан"
-            if let nextQuestion = questionFactory.requestNextQuestion() {
-                currentQuestion = nextQuestion
-                let viewModel = convert(model: nextQuestion)
-                show(quiz: viewModel)
-            }
+            questionFactory?.requestNextQuestion()
         }
     }
     // приватный метод для показа результатов раунда квиза
-    // принимает вью модель QuizResultsViewModel и ничего не возвращает
+    // отвечает за отображение алерта с результатами квиза после прохождения всех вопросов
     private func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController(title: result.title,
-                                      message: result.text,
-                                      preferredStyle: .alert)
-        let action = UIAlertAction(title: result.buttonText,
-                                   style: .default) { [weak self] _ in // слабая ссылка на self
-            guard let self = self else {return} // разворачиваем слабую ссылку
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            if let firstQuestion = self.questionFactory.requestNextQuestion() {
-                self.currentQuestion = firstQuestion
-                let viewModel = self.convert(model: firstQuestion)
-                self.show(quiz: viewModel)
-            }
+        // Обновляем значение gamesCount при каждом вызове метода store
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        
+        // Получаем текущую лучшую игру из сервиса статистики
+        let bestGame = statisticService.bestGame
+        // Формируем сообщение для алерта
+        var message = result.text
+        // Получаем информацию о рекорде игры с помощью метода recordText() из структуры GameRecord
+        let currentGameRecord = statisticService.bestGame.recordText()
+        // Проверяем, что текущая игра лучше лучшей и имеет информацию о рекорде, и добавляем ее к сообщению для алерта
+        if bestGame.isBetter(than: statisticService.bestGame), !currentGameRecord.isEmpty {
+            message += "\n\n" + currentGameRecord
         }
-        alert.addAction(action)
-        self.present(alert, animated: true, completion: nil)
+        // Добавляем информацию о средней точности
+        let averageAccuracy = GameRecord.averageAccuracy(totalCorrect: statisticService.totalCorrectAnswers, totalQuestions: statisticService.totalQuestionsPlayed)
+        // Добавляем информацию о количестве сыгранных квизов
+        message += "\nКоличество сыгранных квизов: \(statisticService.gamesCount)"
+        // Добавляем информацию о лучшем результате
+        message += "\nРекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))"
+        // Добавляем информацию о средней точности
+        message += "\nСредняя точность: \(String(format: "%.2f", averageAccuracy))%"
+        
+        let alertModel = AlertModel(
+            title: result.title,
+            message: message,
+            buttonText: result.buttonText) { [weak self] in
+                // Перезапуск квиза, когда пользователь нажимает кнопку в алерте
+                self?.startNewGame()
+            }
+        let alertPresenter = AlertPresenter(presentingViewController: self)
+        alertPresenter.presentAlert(with: alertModel)
     }
+    // Метод для перезапуска игры
+    private func startNewGame() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.requestNextQuestion()
+    }
+    
     // приватный метод, который меняет цвет рамки
     // принимает на вход булевое значение и ничего не возвращает
     private func showAnswerResult(isCorrect: Bool) {
+        //использeуем UIFeedbackGenerator для вибраций при правильных и неправильных ответах
+        let feedbackGenerator = UINotificationFeedbackGenerator()
+        feedbackGenerator.prepare()
+        feedbackGenerator.notificationOccurred(isCorrect ? .success : .error)
         // блокируем кнопки
-           isButtonsEnabled = false
+        isButtonsEnabled = false
         if isCorrect {
             correctAnswers += 1
         }
@@ -123,27 +196,16 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - IBActions
     // метод вызывается, когда пользователь нажимает на кнопку "Да"
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        guard isButtonsEnabled else {
+        guard isButtonsEnabled, let currentQuestion = currentQuestion else {
             return
         }
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = true
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        showAnswerResult(isCorrect: true == currentQuestion.correctAnswer)
     }
     // метод вызывается, когда пользователь нажимает на кнопку "Нет"
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        guard isButtonsEnabled else {
+        guard isButtonsEnabled, let currentQuestion = currentQuestion else {
             return
         }
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = false
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        showAnswerResult(isCorrect: false == currentQuestion.correctAnswer)
     }
 }
-
-
-
