@@ -1,38 +1,10 @@
 import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
-    // MARK: - Lifecycle
-    // данные на экране
-    struct ViewModel {
-        let image: UIImage
-        let question: String
-        let questionNumber: String
-    }
-    struct Actor: Codable {
-        let id: String
-        let image: String
-        let name: String
-        let asCharacter: String
-    }
-    struct Movie: Codable {
-        let id: String
-        let rank: String
-        let title: String
-        let fullTitle: String
-        let year: String
-        let image: String
-        let crew: String
-        let imDbRating: String
-        let imDbRatingCount: String
-    }
-    struct Top: Decodable {
-        let items: [Movie]
-    }
-    
     // MARK: - IBOutlets
-    @IBOutlet private var imageView: UIImageView!
-    @IBOutlet private var textLabel: UILabel!
-    @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet private weak var imageView: UIImageView!
+    @IBOutlet private weak var textLabel: UILabel!
+    @IBOutlet private weak var counterLabel: UILabel!
     
     // MARK: - Private Properties
     // переменная с индексом текущего вопроса, начальное значение 0 (так как индекс в массиве начинается с 0)
@@ -55,27 +27,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         super.viewDidLoad()
         questionFactory = QuestionFactory(delegate: self)
         questionFactory?.requestNextQuestion()
-        
-        // Инициализируем переменную statisticService как StatisticServiceImplementation
         statisticService = StatisticServiceImplementation()
-        
-        // Получение пути к директории документов
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileName = "top250MoviesIMDB.json"
-        let fileURL = documentsURL.appendingPathComponent(fileName)
-        print(NSHomeDirectory())
-        
-        // Проверка наличия данных и декодирование JSON
-        do {
-            let data = try Data(contentsOf: fileURL)
-            guard let result = try? JSONDecoder().decode(Top.self, from: data) else {
-                print("Ошибка при декодировании JSON")
-                return
-            }
-            // Декодирование успешно, вы можете использовать объект result
-        } catch {
-            print("Ошибка при загрузке данных: \(error.localizedDescription)")
-        }
+        loadDataFromJSON()
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -91,6 +44,31 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // MARK: - Private Methods
+    // Вспомогательный метод для загрузки данных из JSON
+    private func loadDataFromJSON() {
+        guard let fileURL = getJSONFileURL() else {
+            print("Не удалось получить путь к JSON файлу.")
+            return
+        }
+        do {
+            let data = try Data(contentsOf: fileURL)
+            guard let result = try? JSONDecoder().decode(Top.self, from: data) else {
+                print("Ошибка при декодировании JSON")
+                return
+            }
+            // Декодирование успешно, вы можете использовать объект result
+        } catch {
+            print("Ошибка при загрузке данных: \(error.localizedDescription)")
+        }
+    }
+    // Вспомогательный метод для получения пути к JSON файлу
+    private func getJSONFileURL() -> URL? {
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = "top250MoviesIMDB.json"
+        let fileURL = documentsURL.appendingPathComponent(fileName)
+        print(NSHomeDirectory())
+        return fileURL
+    }
     // приватный метод конвертации, который принимает моковый вопрос и возвращает вью модель для главного экрана
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         //Создаём константу questionStep и вызываем конструктор QuizStepViewModel;
@@ -136,8 +114,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let bestGame = statisticService.bestGame
         // Формируем сообщение для алерта
         var message = result.text
-        // Получаем информацию о рекорде игры с помощью метода recordText() из структуры GameRecord
-        let currentGameRecord = statisticService.bestGame.recordText()
+        // Получаем информацию о рекорде игры с помощью свойства recordText из структуры GameRecord
+        let currentGameRecord = statisticService.bestGame.recordText
         // Проверяем, что текущая игра лучше лучшей и имеет информацию о рекорде, и добавляем ее к сообщению для алерта
         if bestGame.isBetter(than: statisticService.bestGame), !currentGameRecord.isEmpty {
             message += "\n\n" + currentGameRecord

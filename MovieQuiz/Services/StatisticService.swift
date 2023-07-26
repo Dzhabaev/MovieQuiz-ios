@@ -96,11 +96,9 @@ struct GameRecord: Codable {
         // Сравниваем по количеству правильных ответов в игре
         return correct > otherRecord.correct
     }
-    // Метод для получения текста с рекордом, формируемого для вывода в алерт
-    func recordText() -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yyyy"
-        let dateString = dateFormatter.string(from: date)
+    // Свойство для получения текста с рекордом, формируемого для вывода в алерт
+    var recordText: String {
+        let dateString = date.dateTimeString
         return "Дата: \(dateString)\nПравильных ответов: \(correct) из \(total)\nТочность: \(String(format: "%.2f", Double(correct) / Double(total) * 100))%"
     }
     // Метод для расчета средней точности
