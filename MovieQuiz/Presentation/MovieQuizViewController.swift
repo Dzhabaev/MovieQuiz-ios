@@ -1,10 +1,19 @@
 import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+    }
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
+    
     // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Private Properties
     // переменная с индексом текущего вопроса, начальное значение 0 (так как индекс в массиве начинается с 0)
@@ -21,14 +30,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     // Здесь объявляем переменную statisticService
     private var statisticService: StatisticService!
+    private var alertPresenter: AlertPresenter!
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        questionFactory = QuestionFactory(delegate: self)
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.requestNextQuestion()
         statisticService = StatisticServiceImplementation()
         loadDataFromJSON()
+        alertPresenter = AlertPresenter(presentingViewController: self)
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -52,7 +65,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
         do {
             let data = try Data(contentsOf: fileURL)
-            guard let result = try? JSONDecoder().decode(Top.self, from: data) else {
+            guard (try? JSONDecoder().decode(Top.self, from: data)) != nil else {
                 print("Ошибка при декодировании JSON")
                 return
             }
@@ -71,15 +84,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     // приватный метод конвертации, который принимает моковый вопрос и возвращает вью модель для главного экрана
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        //Создаём константу questionStep и вызываем конструктор QuizStepViewModel;
-        let questionStep = QuizStepViewModel(
-            //Инициализируем картинку с помощью конструктора UIImage(named: ); если картинки с таким названием не найдётся, подставляем пустую;
-            image: UIImage(named: model.image) ?? UIImage(),
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
             //Просто забираем уже готовый вопрос из мокового вопроса;
             question: model.text,
             //Высчитываем номер вопроса с помощью переменной текущего вопроса currentQuestionIndex и массива со списком вопросов questions. Ииспользуем интерполяцию, то есть подставляем результат в строку, чтобы получилось "X/10";
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
     }
     // приватный метод вывода на экран вопроса, который принимает на вход вью модель вопроса и ничего не возвращает
     private func show(quiz step: QuizStepViewModel) {
@@ -169,6 +179,26 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             // разблокируем кнопки
             self.isButtonsEnabled = true
         }
+    }
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        let model = AlertModel(title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            self.currentQuestionIndex = 0
+            self.correctAnswers = 0
+            self.questionFactory?.requestNextQuestion()
+        }
+        alertPresenter.presentAlert(with: model)
+    }
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
     }
     
     // MARK: - IBActions
