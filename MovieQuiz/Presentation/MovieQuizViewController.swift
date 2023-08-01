@@ -41,6 +41,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         loadDataFromJSON()
         alertPresenter = AlertPresenter(presentingViewController: self)
         showLoadingIndicator()
+        activityIndicator.hidesWhenStopped = true
         questionFactory?.loadData()
     }
     
@@ -180,25 +181,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.isButtonsEnabled = true
         }
     }
-    private func hideLoadingIndicator() {
-        activityIndicator.isHidden = false
+    private func showLoadingIndicator() {
         activityIndicator.startAnimating()
+    }
+    private func hideLoadingIndicator() {
+        activityIndicator.stopAnimating()
+    }
+    //метод, который обнуляет текущий прогресс квиза.
+    private func resetQuiz() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.resetData()
+        questionFactory?.requestNextQuestion()
     }
     private func showNetworkError(message: String) {
         hideLoadingIndicator()
         let model = AlertModel(title: "Ошибка",
                                message: message,
                                buttonText: "Попробовать еще раз") { [weak self] in
-            guard let self = self else { return }
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            self.questionFactory?.requestNextQuestion()
+            self?.resetQuiz()
         }
         alertPresenter.presentAlert(with: model)
-    }
-    private func showLoadingIndicator() {
-        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
-        activityIndicator.startAnimating() // включаем анимацию
     }
     
     // MARK: - IBActions
