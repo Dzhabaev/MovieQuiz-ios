@@ -1,60 +1,62 @@
-import Foundation
+import UIKit
 
 class QuestionFactory: QuestionFactoryProtocol {
-    // массив со списком моковых вопросов
-    private let questions: [QuizQuestion] = [
-        QuizQuestion(
-            image: "The Godfather",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Dark Knight",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Kill Bill",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Avengers",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Deadpool",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Green Knight",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Old",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: false),
-        QuizQuestion(
-            image: "The Ice Age Adventures of Buck Wild",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: false),
-        QuizQuestion(
-            image: "Tesla",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: false),
-        QuizQuestion(
-            image: "Vivarium",
-            text: "Рейтинг этого фильма больше чем 6?",
-            correctAnswer: false)
-    ]
-    // объявляем функцию requestNextQuestion, которая ничего не принимает и возвращает опциональную модель QuizQuestion
-    func requestNextQuestion() {
-        guard let index = (0..<questions.count).randomElement() else {
-            delegate?.didReceiveNextQuestion(question: nil)
-            return
-        }
-        let question = questions[safe: index]
-        delegate?.didReceiveNextQuestion(question: question)
+    func resetData() {
+        loadData()
     }
+    private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
-    init(delegate: QuestionFactoryDelegate){
+    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
+        self.moviesLoader = moviesLoader
         self.delegate = delegate
+    }
+    private var movies: [MostPopularMovie] = []
+    // Метод, который использует moviesLoader для загрузки данных о популярных фильмах
+    func loadData() {
+        moviesLoader.loadMovies { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                switch result {
+                case .success(let mostPopularMovies):
+                    self.movies = mostPopularMovies.items
+                    self.delegate?.didLoadDataFromServer()
+                case .failure(let error):
+                    self.delegate?.didFailToLoadData(with: error)
+                }
+            }
+        }
+    }
+    // Метод который генерирует случайный вопрос о фильме
+    func requestNextQuestion() {
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self else { return }
+            let index = (0..<self.movies.count).randomElement() ?? 0
+            guard let movie = self.movies[safe: index] else { return }
+            // Генерируем случайный рейтинг для каждого фильма
+            let minRating: Float = 3.0
+            let maxRating: Float = 9.0
+            let randomRating = Float.random(in: minRating...maxRating)
+            
+            if let imageData = try? Data(contentsOf: movie.resizedImageURL),
+               let _ = UIImage(data: imageData) {
+                let rating = Float(movie.rating) ?? 0
+                let roundedRandomRating = Int(randomRating)
+                let text = "Рейтинг этого фильма \(randomRating > rating ? "больше" : "меньше") чем \(roundedRandomRating)?"
+                let correctAnswer = randomRating > rating
+                let question = QuizQuestion(image: imageData,
+                                            text: text,
+                                            correctAnswer: correctAnswer)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.didReceiveNextQuestion(question: question)
+                }
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    let errorMessage = "Не удалось загрузить изображение фильма. Попробуйте еще раз."
+                    self.delegate?.didFailToLoadData(with: NSError(domain: "QuestionFactoryError", code: 1, userInfo: [NSLocalizedDescriptionKey: errorMessage]))
+                }
+            }
+        }
     }
 }
