@@ -16,14 +16,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Private Properties
-    // переменная с индексом текущего вопроса, начальное значение 0 (так как индекс в массиве начинается с 0)
-    private var currentQuestionIndex = 0
+    private let presenter = MovieQuizPresenter()
     // переменная со счётчиком правильных ответов, начальное значение закономерно 0
     private var correctAnswers = 0
     // переменная состояния кнопки
     private var isButtonsEnabled = true
-    //общее количество вопросов для квиза
-    private let questionsAmount: Int = 10
     //контроллер обращаться к фабрики вопросов
     private var questionFactory: QuestionFactoryProtocol?
     //текущий вопрос, который видит пользователь
@@ -51,7 +48,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             return
         }
         currentQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
@@ -83,15 +80,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         print(NSHomeDirectory())
         return fileURL
     }
-    // приватный метод конвертации, который принимает моковый вопрос и возвращает вью модель для главного экрана
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            //Просто забираем уже готовый вопрос из мокового вопроса;
-            question: model.text,
-            //Высчитываем номер вопроса с помощью переменной текущего вопроса currentQuestionIndex и массива со списком вопросов questions. Ииспользуем интерполяцию, то есть подставляем результат в строку, чтобы получилось "X/10";
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-    }
     // приватный метод вывода на экран вопроса, который принимает на вход вью модель вопроса и ничего не возвращает
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -101,16 +89,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // приватный метод, который содержит логику перехода в один из сценариев
     // метод ничего не принимает и ничего не возвращает
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             // идём в состояние "Результат квиза"
-            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
+            let text = "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)"
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
             show(quiz: viewModel)
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             // идём в состояние "Вопрос показан"
             questionFactory?.requestNextQuestion()
         }
@@ -119,7 +107,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // отвечает за отображение алерта с результатами квиза после прохождения всех вопросов
     private func show(quiz result: QuizResultsViewModel) {
         // Обновляем значение gamesCount при каждом вызове метода store
-        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
         
         // Получаем текущую лучшую игру из сервиса статистики
         let bestGame = statisticService.bestGame
@@ -152,7 +140,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     // Метод для перезапуска игры
     private func startNewGame() {
-        currentQuestionIndex = 0
+        presenter.resetQuestionIndex()
         correctAnswers = 0
         questionFactory?.requestNextQuestion()
     }
@@ -189,7 +177,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     //метод, который обнуляет текущий прогресс квиза.
     private func resetQuiz() {
-        currentQuestionIndex = 0
+        presenter.resetQuestionIndex()
         correctAnswers = 0
         questionFactory?.resetData()
         questionFactory?.requestNextQuestion()
