@@ -20,7 +20,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // переменная со счётчиком правильных ответов, начальное значение закономерно 0
     private var correctAnswers = 0
     // переменная состояния кнопки
-    private var isButtonsEnabled = true
+    
     //контроллер обращаться к фабрики вопросов
     private var questionFactory: QuestionFactoryProtocol?
     //текущий вопрос, который видит пользователь
@@ -40,6 +40,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showLoadingIndicator()
         activityIndicator.hidesWhenStopped = true
         questionFactory?.loadData()
+        presenter.viewController = self
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -147,13 +148,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // приватный метод, который меняет цвет рамки
     // принимает на вход булевое значение и ничего не возвращает
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         //использeуем UIFeedbackGenerator для вибраций при правильных и неправильных ответах
         let feedbackGenerator = UINotificationFeedbackGenerator()
         feedbackGenerator.prepare()
         feedbackGenerator.notificationOccurred(isCorrect ? .success : .error)
         // блокируем кнопки
-        isButtonsEnabled = false
+        presenter.isButtonsEnabled = false
         if isCorrect {
             correctAnswers += 1
         }
@@ -166,7 +167,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.imageView.layer.borderWidth = 0
             self.showNextQuestionOrResults()
             // разблокируем кнопки
-            self.isButtonsEnabled = true
+            self.presenter.isButtonsEnabled = true
         }
     }
     private func showLoadingIndicator() {
@@ -193,18 +194,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // MARK: - IBActions
-    // метод вызывается, когда пользователь нажимает на кнопку "Да"
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        guard isButtonsEnabled, let currentQuestion = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: true == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
-    // метод вызывается, когда пользователь нажимает на кнопку "Нет"
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        guard isButtonsEnabled, let currentQuestion = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: false == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
 }
