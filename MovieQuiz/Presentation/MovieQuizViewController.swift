@@ -19,12 +19,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private let presenter = MovieQuizPresenter()
     // переменная со счётчиком правильных ответов, начальное значение закономерно 0
     private var correctAnswers = 0
-    // переменная состояния кнопки
-    
     //контроллер обращаться к фабрики вопросов
     private var questionFactory: QuestionFactoryProtocol?
-    //текущий вопрос, который видит пользователь
-    private var currentQuestion: QuizQuestion?
     // Здесь объявляем переменную statisticService
     private var statisticService: StatisticService!
     private var alertPresenter: AlertPresenter!
@@ -45,14 +41,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
-            return
-        }
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     // MARK: - Private Methods
@@ -82,7 +71,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         return fileURL
     }
     // приватный метод вывода на экран вопроса, который принимает на вход вью модель вопроса и ничего не возвращает
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
@@ -106,7 +95,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     // приватный метод для показа результатов раунда квиза
     // отвечает за отображение алерта с результатами квиза после прохождения всех вопросов
-    private func show(quiz result: QuizResultsViewModel) {
+    func show(quiz result: QuizResultsViewModel) {
         // Обновляем значение gamesCount при каждом вызове метода store
         statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
         
@@ -165,7 +154,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in // слабая ссылка на self
             guard let self = self else {return} // слабая ссылка на self
             self.imageView.layer.borderWidth = 0
-            self.showNextQuestionOrResults()
+            self.presenter.correctAnswers = self.correctAnswers
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
             // разблокируем кнопки
             self.presenter.isButtonsEnabled = true
         }
@@ -195,11 +186,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - IBActions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
     }
 }
