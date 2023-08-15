@@ -12,7 +12,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     // MARK: - Properties
     private let statisticService: StatisticService!
     private var questionFactory: QuestionFactoryProtocol?
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     
     private var currentQuestion: QuizQuestion?
     private let questionsAmount = 10
@@ -21,7 +21,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     var isButtonsEnabled = true
     
     // MARK: - Initialization
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)

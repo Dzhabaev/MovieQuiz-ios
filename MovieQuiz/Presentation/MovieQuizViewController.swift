@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
     // MARK: - IBOutlets
     @IBOutlet private var imageView: UIImageView!
@@ -17,6 +17,9 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
+        loadDataFromJSON()
+        showLoadingIndicator()
+        activityIndicator.hidesWhenStopped = true
     }
     
     // MARK: - Private Methods
@@ -61,6 +64,7 @@ final class MovieQuizViewController: UIViewController {
             title: result.title,
             message: message,
             preferredStyle: .alert)
+        alert.view.accessibilityIdentifier = "Game results"
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.presenter.restartGame()
@@ -75,11 +79,10 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     func showLoadingIndicator() {
-        activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     func hideLoadingIndicator() {
-        activityIndicator.isHidden = true
+        activityIndicator.stopAnimating()
     }
     func showNetworkError(message: String) {
         hideLoadingIndicator()
