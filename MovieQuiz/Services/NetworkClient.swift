@@ -8,7 +8,7 @@
 import Foundation
 
 protocol NetworkRouting {
-    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+    func fetch(request: URLRequest, handler: @escaping (Result<Data, Error>) -> Void)
 }
 /// Отвечает за загрузку данных по URL
 struct NetworkClient: NetworkRouting {
@@ -16,8 +16,7 @@ struct NetworkClient: NetworkRouting {
     private enum NetworkError: Error {
         case codeError
     }
-    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
-        let request = URLRequest(url: url)
+    func fetch(request: URLRequest, handler: @escaping (Result<Data, Error>) -> Void) {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             // Проверяем, пришла ли ошибка
             if let error = error {

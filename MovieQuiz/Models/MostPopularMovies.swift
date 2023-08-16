@@ -7,12 +7,19 @@
 
 import Foundation
 
+protocol Movie {
+    var title: String { get }
+    var rating: String { get }
+    var imageURL: URL { get }
+    var resizedImageURL: URL { get }
+}
+
 struct MostPopularMovies: Codable {
     let errorMessage: String
     let items: [MostPopularMovie]
 }
 
-struct MostPopularMovie: Codable {
+struct MostPopularMovie: Codable, Movie {
     let title: String
     let rating: String
     let imageURL: URL

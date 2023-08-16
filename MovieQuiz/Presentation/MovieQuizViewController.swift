@@ -9,6 +9,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private var yesButton: UIButton!
     @IBOutlet private var noButton: UIButton!
+    @IBOutlet weak var switchKpImdb: UISwitch!
     
     // MARK: - Private Properties
     private var presenter: MovieQuizPresenter!
@@ -31,7 +32,11 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         }
         do {
             let data = try Data(contentsOf: fileURL)
-            guard (try? JSONDecoder().decode(Top.self, from: data)) != nil else {
+            guard (try? JSONDecoder().decode(Kinopoisk.self, from: data)) != nil else {
+                print("Ошибка при декодировании JSON")
+                return
+            }
+            guard (try? JSONDecoder().decode(MostPopularMovies.self, from: data)) != nil else {
                 print("Ошибка при декодировании JSON")
                 return
             }
@@ -104,5 +109,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
+    }
+    @IBAction func switchKpImdb(_ sender: UISwitch) {
     }
 }

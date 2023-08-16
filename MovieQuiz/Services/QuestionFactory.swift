@@ -10,7 +10,7 @@ class QuestionFactory: QuestionFactoryProtocol {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
-    private var movies: [MostPopularMovie] = []
+    private var movies: [Movie] = []
     // Метод, который использует moviesLoader для загрузки данных о популярных фильмах
     func loadData() {
         moviesLoader.loadMovies { [weak self] result in
@@ -18,7 +18,7 @@ class QuestionFactory: QuestionFactoryProtocol {
                 guard let self = self else { return }
                 switch result {
                 case .success(let mostPopularMovies):
-                    self.movies = mostPopularMovies.items
+                    self.movies = mostPopularMovies
                     self.delegate?.didLoadDataFromServer()
                 case .failure(let error):
                     self.delegate?.didFailToLoadData(with: error)
