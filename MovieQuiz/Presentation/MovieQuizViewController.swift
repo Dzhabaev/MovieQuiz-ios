@@ -12,41 +12,14 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     // MARK: - Private Properties
     private var presenter: MovieQuizPresenter!
+    private var alertPresenter: AlertPresenter!
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
-        loadDataFromJSON()
         showLoadingIndicator()
         activityIndicator.hidesWhenStopped = true
-    }
-    
-    // MARK: - Private Methods
-    // Вспомогательный метод для загрузки данных из JSON
-    private func loadDataFromJSON() {
-        guard let fileURL = getJSONFileURL() else {
-            print("Не удалось получить путь к JSON файлу.")
-            return
-        }
-        do {
-            let data = try Data(contentsOf: fileURL)
-            guard (try? JSONDecoder().decode(Top.self, from: data)) != nil else {
-                print("Ошибка при декодировании JSON")
-                return
-            }
-            // Декодирование успешно, вы можете использовать объект result
-        } catch {
-            print("Ошибка при загрузке данных: \(error.localizedDescription)")
-        }
-    }
-    // Вспомогательный метод для получения пути к JSON файлу
-    private func getJSONFileURL() -> URL? {
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileName = "top250MoviesIMDB.json"
-        let fileURL = documentsURL.appendingPathComponent(fileName)
-        print(NSHomeDirectory())
-        return fileURL
     }
     
     // MARK: - UI Update Methods
@@ -60,17 +33,16 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     // Метод для показа результатов раунда квиза
     func show(quiz result: QuizResultsViewModel) {
         let message = presenter.makeResultsMessage()
-        let alert = UIAlertController(
+        let alertModel = AlertModel(
             title: result.title,
             message: message,
-            preferredStyle: .alert)
-        alert.view.accessibilityIdentifier = "Game results"
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            self.presenter.restartGame()
-        }
-        alert.addAction(action)
-        self.present(alert, animated: true, completion: nil)
+            buttonText: result.buttonText,
+            completion: { [weak self] in
+                guard let self = self else { return }
+                self.presenter.restartGame()
+            },
+            accessibilityIdentifier: "Game results")
+        alertPresenter?.presentAlert(with: alertModel)
     }
     // Метод, который меняет цвет рамки
     func highlightImageBorder(isCorrectAnswer: Bool) {
@@ -96,6 +68,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             self.presenter.restartGame()
         }
         alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
     }
     
     // MARK: - IBActions
@@ -104,5 +77,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
+    }
+    @IBAction private func playAgainButtonClicked(_ sender: UIButton) {
+        presenter.playAgainButtonClicked()
     }
 }

@@ -1,3 +1,9 @@
+//
+//  QuestionFactory.swift
+//  MovieQuiz
+//
+//  Created by Чингиз Джабаев on 18.07.2023.
+//
 import UIKit
 
 class QuestionFactory: QuestionFactoryProtocol {

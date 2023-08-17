@@ -112,18 +112,18 @@
                                 </subviews>
                             </stackView>
                             <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="Ntp-HB-HsO">
-                                <rect key="frame" x="197" y="438" width="20" height="20"/>
+                                <rect key="frame" x="197" y="372" width="20" height="20"/>
                             </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black"/>
                         <constraints>
                             <constraint firstItem="bR5-vc-uRk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="5VA-XU-0xC"/>
-                            <constraint firstItem="Ntp-HB-HsO" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="8IX-bn-ukG"/>
+                            <constraint firstItem="Ntp-HB-HsO" firstAttribute="centerX" secondItem="TUO-Fp-sn8" secondAttribute="centerX" id="82y-wV-c5J"/>
+                            <constraint firstItem="Ntp-HB-HsO" firstAttribute="centerY" secondItem="TUO-Fp-sn8" secondAttribute="centerY" id="9vA-he-qZy"/>
                             <constraint firstItem="bR5-vc-uRk" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="EYm-4a-gv5"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="bR5-vc-uRk" secondAttribute="trailing" constant="20" id="aBh-ok-pGJ"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="bR5-vc-uRk" secondAttribute="bottom" id="cfJ-3h-479"/>
-                            <constraint firstItem="Ntp-HB-HsO" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="qjb-YN-h7J"/>
                         </constraints>
                     </view>
                     <connections>

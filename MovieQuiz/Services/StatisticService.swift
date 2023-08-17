@@ -1,3 +1,9 @@
+//
+//  QuestionFactoryProtocol.swift
+//  MovieQuiz
+//
+//  Created by Чингиз Джабаев on 18.07.2023.
+//
 //Сущность для взаимодействия с UserDefaults
 import Foundation
 // Протокол определяет интерфейс для взаимодействия с UserDefaults и хранения статистики игр
@@ -57,15 +63,15 @@ final class StatisticServiceImplementation: StatisticService {
     }
     private let userDefaults = UserDefaults.standard
     // Перечисление для хранения ключей UserDefaults
-        private enum Keys: String {
-            case totalCorrectAnswers, totalQuestionsPlayed, bestGame, gamesCount, totalAccuracy
-        }
+    private enum Keys: String {
+        case totalCorrectAnswers, totalQuestionsPlayed, bestGame, gamesCount, totalAccuracy
+    }
     init() {
-            // Инициализируем свойства значениями из UserDefaults, если они доступны, иначе устанавливаем значения по умолчанию.
-            gamesCount = userDefaults.integer(forKey: Keys.gamesCount.rawValue)
-            totalCorrectAnswers = userDefaults.integer(forKey: Keys.totalCorrectAnswers.rawValue)
-            totalQuestionsPlayed = userDefaults.integer(forKey: Keys.totalQuestionsPlayed.rawValue)
-        }
+        // Инициализируем свойства значениями из UserDefaults, если они доступны, иначе устанавливаем значения по умолчанию.
+        gamesCount = userDefaults.integer(forKey: Keys.gamesCount.rawValue)
+        totalCorrectAnswers = userDefaults.integer(forKey: Keys.totalCorrectAnswers.rawValue)
+        totalQuestionsPlayed = userDefaults.integer(forKey: Keys.totalQuestionsPlayed.rawValue)
+    }
     // Приватные свойства для хранения информации о результатах игр
     internal var totalCorrectAnswers: Int = 0
     internal var totalQuestionsPlayed: Int = 0

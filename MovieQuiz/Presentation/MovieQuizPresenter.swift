@@ -18,13 +18,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private let questionsAmount = 10
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    var isButtonsEnabled = true
+    private var isButtonsEnabled = true
     
     // MARK: - Initialization
     init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        loadDataFromJSON()
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
     }
@@ -72,6 +73,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
+    func showResults(with viewModel: QuizResultsViewModel) {
+        viewController?.show(quiz: viewModel)
+    }
+    func playAgainButtonClicked() {
+        restartGame()
+    }
     
     // MARK: - User Interaction Methods
     func yesButtonClicked() {
@@ -88,11 +95,13 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     private func proceedWithAnswer(isCorrect: Bool) {
+        isButtonsEnabled = false
         didAnswer(isCorrectAnswer: isCorrect)
         viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             self.proceedToNextQuestionOrResults()
+            isButtonsEnabled = true
         }
     }
     private func proceedToNextQuestionOrResults() {
@@ -105,7 +114,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
-            viewController?.show(quiz: viewModel)
+            showResults(with: viewModel)
         } else {
             self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
@@ -123,5 +132,31 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
         ].joined(separator: "\n")
         return resultMessage
+    }
+    // MARK: - Private Methods
+    // Вспомогательный метод для загрузки данных из JSON
+    private func loadDataFromJSON() {
+        guard let fileURL = getJSONFileURL() else {
+            print("Не удалось получить путь к JSON файлу.")
+            return
+        }
+        do {
+            let data = try Data(contentsOf: fileURL)
+            guard (try? JSONDecoder().decode(Top.self, from: data)) != nil else {
+                print("Ошибка при декодировании JSON")
+                return
+            }
+            // Декодирование успешно, вы можете использовать объект result
+        } catch {
+            print("Ошибка при загрузке данных: \(error.localizedDescription)")
+        }
+    }
+    // Вспомогательный метод для получения пути к JSON файлу
+    private func getJSONFileURL() -> URL? {
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = "top250MoviesIMDB.json"
+        let fileURL = documentsURL.appendingPathComponent(fileName)
+        print(NSHomeDirectory())
+        return fileURL
     }
 }
