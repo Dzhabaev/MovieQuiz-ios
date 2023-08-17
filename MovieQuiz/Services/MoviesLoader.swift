@@ -17,7 +17,7 @@ enum MovieLoaderApiType {
 
 class MoviesLoader: MoviesLoading {
     
-    private var apiType: MovieLoaderApiType = .imdb
+    private var apiType: MovieLoaderApiType = .kp
     private lazy var requestFactory: MovieLoaderRequestFactory = MovieLoaderRequestFactoryImpl()
     private lazy var responceHendler: MoviesLoaderResponceHandler = MoviesLoaderResponceHandlerImpl()
     

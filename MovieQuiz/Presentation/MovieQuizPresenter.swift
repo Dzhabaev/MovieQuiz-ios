@@ -18,7 +18,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private let questionsAmount = 10
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    var isButtonsEnabled = true
+    private var isButtonsEnabled = true
     
     // MARK: - Initialization
     init(viewController: MovieQuizViewControllerProtocol) {
@@ -88,10 +88,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     private func proceedWithAnswer(isCorrect: Bool) {
+        isButtonsEnabled = false
         didAnswer(isCorrectAnswer: isCorrect)
         viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
+            isButtonsEnabled = true
             self.proceedToNextQuestionOrResults()
         }
     }

@@ -25,7 +25,7 @@ class MovieLoaderRequestFactoryImpl: MovieLoaderRequestFactory {
                 URLQueryItem(name: "top250", value: "!null")
             ]
             var request = URLRequest(url: components.url!)
-            request.timeoutInterval = 2
+            request.timeoutInterval = 2 // Времени ожидания ответа от сервера 2 секунды
             request.addValue("JX95J99-GQH44DA-KJ6T9Q5-STB3F0N", forHTTPHeaderField: "X-API-KEY")
             return request
         case .imdb:

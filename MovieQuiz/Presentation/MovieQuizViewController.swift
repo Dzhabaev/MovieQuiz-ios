@@ -9,7 +9,6 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private var yesButton: UIButton!
     @IBOutlet private var noButton: UIButton!
-    @IBOutlet weak var switchKpImdb: UISwitch!
     
     // MARK: - Private Properties
     private var presenter: MovieQuizPresenter!
@@ -109,7 +108,5 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
-    }
-    @IBAction func switchKpImdb(_ sender: UISwitch) {
     }
 }
