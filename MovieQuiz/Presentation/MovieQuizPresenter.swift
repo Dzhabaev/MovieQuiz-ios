@@ -10,8 +10,8 @@ import UIKit
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     // MARK: - Properties
-    private let statisticService: StatisticService!
-    private var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticService
+    private var questionFactory: QuestionFactoryProtocol
     private weak var viewController: MovieQuizViewControllerProtocol?
     
     private var currentQuestion: QuizQuestion?
@@ -21,23 +21,29 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var isButtonsEnabled = true
     
     // MARK: - Initialization
-    init(viewController: MovieQuizViewControllerProtocol) {
+    init(viewController: MovieQuizViewControllerProtocol,
+         questionFactory: QuestionFactoryProtocol,
+         statisticService: StatisticService) {
         self.viewController = viewController
-        statisticService = StatisticServiceImplementation()
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        self.questionFactory = questionFactory
+        self.statisticService = statisticService
+        self.questionFactory.delegate = self
         loadDataFromJSON()
-        questionFactory?.loadData()
+        questionFactory.loadData()
         viewController.showLoadingIndicator()
     }
     
     // MARK: - QuestionFactoryDelegate Methods
     func didLoadDataFromServer() {
+        print("Данные успешно загружены с сервера.")
         viewController?.hideLoadingIndicator()
-        questionFactory?.requestNextQuestion()
+        questionFactory.requestNextQuestion()
     }
     func didFailToLoadData(with error: Error) {
+        print("Не удалось загрузить данные с сервера:", error)
         let message = error.localizedDescription
         viewController?.showNetworkError(message: message)
+        viewController?.hideLoadingIndicator()
     }
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
@@ -62,7 +68,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func restartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
-        questionFactory?.requestNextQuestion()
+        questionFactory.requestNextQuestion()
     }
     func switchToNextQuestion() {
         currentQuestionIndex += 1
@@ -117,7 +123,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             showResults(with: viewModel)
         } else {
             self.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
+            questionFactory.requestNextQuestion()
         }
     }
     func makeResultsMessage() -> String {

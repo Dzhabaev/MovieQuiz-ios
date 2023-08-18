@@ -11,8 +11,8 @@ class QuestionFactory: QuestionFactoryProtocol {
         loadData()
     }
     private let moviesLoader: MoviesLoading
-    private weak var delegate: QuestionFactoryDelegate?
-    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
+    weak var delegate: QuestionFactoryDelegate?
+    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate? = nil) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
