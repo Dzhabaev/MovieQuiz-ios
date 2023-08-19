@@ -13,6 +13,9 @@ class AlertPresenter {
             model.completion?()
         }
         alert.addAction(action)
+        if let accessibilityIdentifier = model.accessibilityIdentifier {
+            alert.view.accessibilityIdentifier = accessibilityIdentifier
+        }
         presentingViewController?.present(alert, animated: true, completion: nil)
     }
 }

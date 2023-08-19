@@ -1,5 +1,10 @@
+//
+//  QuestionFactoryDelegate.swift
+//  MovieQuiz
+//
+//  Created by Чингиз Джабаев on 18.07.2023.
+//
 import Foundation
-//протокол, используемый в фабрике как делегат
 protocol QuestionFactoryDelegate: AnyObject {
     func didReceiveNextQuestion(question: QuizQuestion?)
     func didLoadDataFromServer() // сообщение об успешной загрузке

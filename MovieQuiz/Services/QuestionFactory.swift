@@ -1,3 +1,9 @@
+//
+//  QuestionFactory.swift
+//  MovieQuiz
+//
+//  Created by Чингиз Джабаев on 18.07.2023.
+//
 import UIKit
 
 class QuestionFactory: QuestionFactoryProtocol {
@@ -5,8 +11,8 @@ class QuestionFactory: QuestionFactoryProtocol {
         loadData()
     }
     private let moviesLoader: MoviesLoading
-    private weak var delegate: QuestionFactoryDelegate?
-    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
+    weak var delegate: QuestionFactoryDelegate?
+    init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate? = nil) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
